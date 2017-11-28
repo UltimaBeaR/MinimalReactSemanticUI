@@ -1,15 +1,20 @@
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const CheckerPlugin = require('awesome-typescript-loader').CheckerPlugin;
+const autoprefixer = require('autoprefixer');
 const bundleOutputDir = './wwwroot/dist';
+
+// ToDo: При первоначальной установке npm зависимостей нужно выполнить npm rebuild node-sass
 
 module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
+
+    process.env.NODE_ENV = isDevBuild ? "development" : "production";
+
     return [{
         stats: { modules: false },
-        entry: { 'main': './ClientApp/boot.tsx' },
-        resolve: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+        entry: { 'main': './ClientApp/boot.jsx' },
+        resolve: { extensions: ['.js', '.jsx'] },
         output: {
             path: path.join(__dirname, bundleOutputDir),
             filename: '[name].js',
@@ -17,13 +22,55 @@ module.exports = (env) => {
         },
         module: {
             rules: [
-                { test: /\.tsx?(\?|$)/, include: /ClientApp/, use: 'awesome-typescript-loader?silent=true' },
-                { test: /\.css(\?|$)/, use: isDevBuild ? ['style-loader', 'css-loader'] : ExtractTextPlugin.extract({ use: 'css-loader?minimize' }) },
+                { test: /\.jsx?(\?|$)/, include: /ClientApp/, use: { loader: 'babel-loader', options: { cacheDirectory: true } } },
+                {
+                    test: /\.s?css(\?|$)/,
+                    use: isDevBuild ?
+                        [
+                            'style-loader',
+                            {
+                                loader: 'css-loader',
+                                options: {
+                                    importLoaders: 2,
+                                    modules: true,
+                                    localIdentName: '[name]__[local]__[hash:base64:5]'
+                                }
+                            },
+                            'sass-loader',
+                            {
+                                loader: 'postcss-loader',
+                                options: {
+                                    plugins: function () {
+                                        return [autoprefixer]
+                                    }
+                                }
+                            }
+                        ]
+                        : ExtractTextPlugin.extract({ use: [
+                            {
+                                loader: 'css-loader',
+                                options: {
+                                    minimize: true,
+                                    importLoaders: 2,
+                                    modules: true,
+                                    localIdentName: '[name]__[local]__[hash:base64:5]'
+                                }
+                            },
+                            'sass-loader',
+                            {
+                                loader: 'postcss-loader',
+                                options: {
+                                    plugins: function () {
+                                        return [autoprefixer]
+                                    }
+                                }
+                            }
+                        ]})
+                },
                 { test: /\.(png|jpg|jpeg|gif|svg)(\?|$)/, use: 'url-loader?limit=25000' }
             ]
         },
         plugins: [
-            new CheckerPlugin(),
             new webpack.DllReferencePlugin({
                 context: __dirname,
                 manifest: require('./wwwroot/dist/vendor-manifest.json')
