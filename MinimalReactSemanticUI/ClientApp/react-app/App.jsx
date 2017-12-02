@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+﻿import React from 'react';
 
 // import semantic-ui css styles (this only required to be done once for whole app)
 // this is global stylesheet because it's referenced as vendor dependency (see webpack config)
