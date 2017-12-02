@@ -1,32 +1,25 @@
-import 'semantic-ui-css/semantic.min.css';
-import './css/site.css';
+// './react-app/App' must be module which exports root component for whole react application as DEFAULT (export default ...)
+// Root component module and all of it's dependencies will be under HMR control (hot module replacement feature)
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
-import { BrowserRouter } from 'react-router-dom';
-import * as RoutesModule from './routes';
 
-let routes = RoutesModule.routes;
+import ReactApp from './react-app/App';
 
-const renderApp = () => {
-    // This code starts up the React app when it runs in a browser. It sets up the routing
-    // configuration and injects the app into a DOM element.
-    const baseUrl = document.getElementsByTagName('base')[0].getAttribute('href');
+const startReactApp = (App) => {
     ReactDOM.render(
         <AppContainer>
-            <BrowserRouter children={ routes } basename={ baseUrl } />
+            <App />
         </AppContainer>,
         document.getElementById('react-app')
     );
 };
 
-renderApp();
+// start rendering react app
+startReactApp(ReactApp);
 
-// Allow Hot Module Replacement
 if (module.hot) {
-    module.hot.accept('./routes', () => {
-        routes = require('./routes').routes;
-        renderApp();
-    });
+    // allow hot module replacement (HMR)
+    module.hot.accept('./react-app/App', () => startReactApp(require('./react-app/App').default));
 }

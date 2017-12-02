@@ -1,15 +1,62 @@
+// run "npm rebuild node-sass" if there are problems related to sass (This happens on very first npm packages restore, seems to be node-sass package problem)
+
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const autoprefixer = require('autoprefixer');
-const bundleOutputDir = './wwwroot/dist';
 
-// ToDo: При первоначальной установке npm зависимостей нужно выполнить npm rebuild node-sass
+const bundleOutputDir = './wwwroot/dist';
 
 module.exports = (env) => {
     const isDevBuild = !(env && env.prod);
 
     process.env.NODE_ENV = isDevBuild ? "development" : "production";
+
+    const buildStyleLoaderChain = (useStyleLoader, minimize, useModules) => {
+        let loaders = [];
+
+        // style loader, if needed
+        if (useStyleLoader)
+            loaders.push('style-loader');
+
+        // css (with configurable options)
+
+        const cssLoader = {
+            loader: 'css-loader',
+            options: {
+                minimize: minimize || false,
+                importLoaders: 2 //< sass, postcss
+            }
+        };
+
+        if (useModules) {
+            cssLoader.options.modules = true;
+            cssLoader.options.localIdentName = '[name]__[local]__[hash:base64:5]';
+        }
+
+        loaders.push(cssLoader);
+
+        // sass/scss
+        loaders.push('sass-loader');
+
+        // autoprefixer
+        loaders.push({
+            loader: 'postcss-loader',
+            options: {
+                plugins: function () {
+                    return [autoprefixer]
+                }
+            }
+        });
+
+        return loaders;
+    };
+
+    const buildScssStyleLoaderChain = (isGlobal) => {
+        return isDevBuild
+            ? buildStyleLoaderChain(true, false, !isGlobal)
+            : ExtractTextPlugin.extract({ use: buildStyleLoaderChain(false, true, !isGlobal) })
+    };
 
     return [{
         stats: { modules: false },
@@ -23,50 +70,12 @@ module.exports = (env) => {
         module: {
             rules: [
                 { test: /\.jsx?(\?|$)/, include: /ClientApp/, use: { loader: 'babel-loader', options: { cacheDirectory: true } } },
-                {
-                    test: /\.s?css(\?|$)/,
-                    use: isDevBuild ?
-                        [
-                            'style-loader',
-                            {
-                                loader: 'css-loader',
-                                options: {
-                                    importLoaders: 2,
-                                    modules: true,
-                                    localIdentName: '[name]__[local]__[hash:base64:5]'
-                                }
-                            },
-                            'sass-loader',
-                            {
-                                loader: 'postcss-loader',
-                                options: {
-                                    plugins: function () {
-                                        return [autoprefixer]
-                                    }
-                                }
-                            }
-                        ]
-                        : ExtractTextPlugin.extract({ use: [
-                            {
-                                loader: 'css-loader',
-                                options: {
-                                    minimize: true,
-                                    importLoaders: 2,
-                                    modules: true,
-                                    localIdentName: '[name]__[local]__[hash:base64:5]'
-                                }
-                            },
-                            'sass-loader',
-                            {
-                                loader: 'postcss-loader',
-                                options: {
-                                    plugins: function () {
-                                        return [autoprefixer]
-                                    }
-                                }
-                            }
-                        ]})
-                },
+                { test: /\.s?css(\?|$)/, oneOf: [
+                    // global styles
+                    { test: /\.global\.s?css(\?|$)/, use: buildScssStyleLoaderChain(true) },
+                    // local styles
+                    { use: buildScssStyleLoaderChain(false) }
+                ]},
                 { test: /\.(png|jpg|jpeg|gif|svg)(\?|$)/, use: 'url-loader?limit=25000' }
             ]
         },
