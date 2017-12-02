@@ -1,3 +1,6 @@
+// This is vendor "dll". It is only compiled when there is no "wwwroot/dist" folder.
+// So if there are any changes in this file, you need to manualy delete "wwwroot/dist" folder and rebuild visual studio solution
+
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
@@ -19,7 +22,11 @@ module.exports = (env) => {
         entry: {
             vendor: [
                 'event-source-polyfill', 'isomorphic-fetch',
+
+                // react
                 'react', 'react-dom', 'react-router-dom',
+
+                // semantic-ui. If you don't need semantic-ui, you can delete/comment this line (You can also delete corresponding npm packages from package.json)
                 'semantic-ui-react', 'semantic-ui-css/semantic.min.css'
             ]
         },

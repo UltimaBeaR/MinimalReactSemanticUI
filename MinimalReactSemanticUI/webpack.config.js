@@ -60,7 +60,7 @@ module.exports = (env) => {
 
     return [{
         stats: { modules: false },
-        entry: { 'main': './ClientApp/boot.jsx' },
+        entry: { 'main': './ClientApp/boot.js' },
         resolve: { extensions: ['.js', '.jsx'] },
         output: {
             path: path.join(__dirname, bundleOutputDir),
