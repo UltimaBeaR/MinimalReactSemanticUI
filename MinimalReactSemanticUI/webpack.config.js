@@ -1,5 +1,3 @@
-// run "npm rebuild node-sass" if there are problems related to sass (This happens on very first npm packages restore, seems to be node-sass package problem)
-
 const path = require('path');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');

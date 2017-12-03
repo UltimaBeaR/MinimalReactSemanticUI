@@ -1,5 +1,6 @@
 // This is vendor "dll". It is only compiled when there is no "wwwroot/dist" folder.
-// So if there are any changes in this file, you need to manualy delete "wwwroot/dist" folder and rebuild visual studio solution
+// So if there are any changes in this file (or in any code referenced from this file, such as npm packages),
+// you need to manualy delete "wwwroot/dist" folder and rebuild visual studio solution
 
 const path = require('path');
 const webpack = require('webpack');
@@ -21,6 +22,9 @@ module.exports = (env) => {
         },
         entry: {
             vendor: [
+                // empty css. This is to force creating vendor.css file, even if no css is using (To avoid 404 error from <link> tag to vendor.css)
+                './WebpackConfig/empty.css',
+
                 'event-source-polyfill', 'isomorphic-fetch',
 
                 // react
